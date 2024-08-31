@@ -3,19 +3,31 @@
 </p>
 
 ## APISR: Anime Production Inspired Real-World Anime Super-Resolution (CVPR 2024)
-APISR aims at restoring and enhancing low-quality low-resolution anime images and video sources with various degradations from real-world scenarios. 
+APISR is an image&video upscaler that aims at restoring and enhancing low-quality low-resolution anime images and video sources with various degradations from real-world scenarios. 
  
-[![Arxiv](https://img.shields.io/badge/Arxiv-<COLOR>.svg)](https://arxiv.org/abs/2403.01598) &ensp; [![HF Demo](https://img.shields.io/static/v1?label=Demo&message=HuggingFace&color=orange)](https://huggingface.co/spaces/HikariDawn/APISR)  &ensp; [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/camenduru/APISR-jupyter/blob/main/APISR_jupyter.ipynb)
+[![Arxiv](https://img.shields.io/badge/Arxiv-<COLOR>.svg)](https://arxiv.org/abs/2403.01598) &ensp; [![HF Demo](https://img.shields.io/static/v1?label=Demo&message=HuggingFace&color=orange)](https://huggingface.co/spaces/HikariDawn/APISR)  &ensp; [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/camenduru/APISR-jupyter/blob/main/APISR_jupyter.ipynb) &ensp;   [![HF Demo](https://img.shields.io/static/v1?label=Demo&message=OpenBayes%E8%B4%9D%E5%BC%8F%E8%AE%A1%E7%AE%97&color=green)](https://openbayes.com/console/public/tutorials/DZr8QYzH5LZ)  &ensp;
 
-👀 [**Visualization**](#Visualization)  **|** 🔥 [Update](#Update) **|** 🔧 [Installation](#installation) **|** 🏰 [**Model Zoo**](docs/model_zoo.md) **|** ⚡ [Inference](#inference) **|** 🧩 [Dataset Curation](#dataset_curation) **|** 💻 [Train](#train)
+🔥 [Update](#Update) **|** 👀 [**Visualization**](#Visualization)  **|** 🔧 [Installation](#installation) **|** 🏰 [**Model Zoo**](docs/model_zoo.md) **|** ⚡ [Inference](#inference) **|** 🧩 [Dataset Curation](#dataset_curation) **|** 💻 [Train](#train) 
+
+
+## <a name="Update"></a>Update 🔥🔥🔥
+- [x] Release Paper version implementation of APISR 
+- [x] Release different upscaler factor weight (for 2x, 4x and more)
+- [x] Gradio demo (with online)
+- [x] Provide weight with different architecture (DAT-Small)
+- [x] Add the result combined with Toon Crafter
+- [ ] Release the weight trained with Diffusion Generated Images
+- [ ] Create a Project Page
+- [ ] Some Online Demo for Chinese users && README in Chinese
+
+:star: **If you like APISR, please help star this repo. Thanks!** :hugs:
+
 
 
 <p align="center">
     <img src="__assets__/workflow.png" style="border-radius: 15px">
 </p>
 
-
-:star: If you like APISR, please help star this repo. Thanks! :hugs:
 
 
 
@@ -46,16 +58,9 @@ APISR aims at restoring and enhancing low-quality low-resolution anime images an
 </p>
 <!--------------------------------------------  --------------------------------------------------->
 
+## Toon Crafter Examples Upscale
 
-
-
-
-## <a name="Update"></a>Update 🔥🔥🔥
-- [x] Release Paper version implementation of APISR 
-- [x] Release different upscaler factor weight (for 2x, 4x and more)
-- [x] Gradio demo (with online)
-- [ ] Provide weight with different architecture
-- [ ] Create a Project Page
+Please check [**toon_crafter_upscale**](docs/toon_crafer_example.md)
 
 
 
@@ -91,15 +96,17 @@ Online demo can be found at https://huggingface.co/spaces/HikariDawn/APISR (Hugg
 
 Local Gradio can be created by running the following:
 ```shell
-python gradio_apisr.py
+python app.py
 ```
+
+**Note:** Gradio is designed for fast inference, so we will automatically download existing weights and downsample to 720P to ease the VRAM consumption. For a full grounder inference, please check the regular inference section below.
 
 
 ## <a name="regular_inference"></a> Regular Inference ⚡⚡
 
 1. Download the model weight from [**model zoo**](docs/model_zoo.md) and **put the weight to "pretrained" folder**.
 
-2. Then, Execute
+2. Then, Execute (**single image/video** or a **directory mixed with images&videos** are all ok!)
     ```shell
     python test_code/inference.py --input_dir XXX  --weight_path XXX  --store_dir XXX
     ```
@@ -110,7 +117,7 @@ python gradio_apisr.py
 ## <a name="dataset_curation"></a> Dataset Curation 🧩
 Our dataset curation pipeline is under **dataset_curation_pipeline** folder. 
 
-You can collect your own dataset by sending videos into the pipeline and get the least compressed and the most informative images from the video sources. 
+You can collect your dataset by sending videos (mp4 or other format) into the pipeline and get the least compressed and the most informative images from the video sources. 
 
 1.  Download [IC9600](https://github.com/tinglyfeng/IC9600?tab=readme-ov-file) weight (ck.pth) from https://drive.google.com/drive/folders/1N3FSS91e7FkJWUKqT96y_zcsG9CRuIJw and place it at "pretrained/" folder (else, you can define a different **--IC9600_pretrained_weight_path** in the following collect.py execution)
 
@@ -122,13 +129,13 @@ You can collect your own dataset by sending videos into the pipeline and get the
 
 3. Once you get an image dataset with various aspect ratios and resolutions, you can run the following scripts
 
-    Be careful to check **full_patch_source** && **degrade_hr_dataset_path** && **train_hr_dataset_path** (we will use these path in **opt.py** setting during training stage)
+    Be careful to check **uncropped_hr** && **degrade_hr_dataset_path** && **train_hr_dataset_path** (we will use these path in **opt.py** setting during training stage)
 
     In order to decrease memory utilization and increase training efficiency, we pre-process all time-consuming pseudo-GT (**train_hr_dataset_path**) at the dataset preparation stage. 
     
-    But in order to create a natural input for prediction-oriented compression, in every epoch, the degradation started from the uncropped GT (**full_patch_source**), and LR synthetic images are concurrently stored. The cropped HR GT dataset (**degrade_hr_dataset_path**) and cropped pseudo-GT (**train_hr_dataset_path**) are fixed in the dataset preparation stage and won't be modified during training.
+    But, in order to create a natural input for prediction-oriented compression, in every epoch, the degradation started from the uncropped GT (**uncropped_hr**), and LR synthetic images are concurrently stored. The cropped HR GT dataset (**degrade_hr_dataset_path**) and cropped pseudo-GT (**train_hr_dataset_path**) are fixed in the dataset preparation stage and won't be modified during training.
 
-    Be careful to check if there is any OOM. If there is, it will be impossible to get correct dataset preparation. Usually, this is because **num_workers** in **scripts/anime_strong_usm.py** is too big!
+    Be careful to check if there is any OOM. If there is, it will be impossible to get the correct dataset preparation. Usually, this is because **num_workers** in **scripts/anime_strong_usm.py** is too big!
     ```shell
     bash scripts/prepare_datasets.sh
     ```
@@ -140,11 +147,11 @@ You can collect your own dataset by sending videos into the pipeline and get the
 
 **The whole training process can be done in one RTX3090/4090!**
 
-1. Prepare a dataset (AVC/API) which follows step 2 & 3 in [**Dataset Curation**](#dataset_curation)
+1. Prepare a dataset ([AVC](https://github.com/TencentARC/AnimeSR?tab=readme-ov-file#request-for-avc-dataset) / API) that is preprocessed by STEP 2 & 3 in [**Dataset Curation**](#dataset_curation)
 
     In total, you will have 3 folders prepared before executing the following commands: 
 
-    --> **full_patch_source**: uncropped GT
+    --> **uncropped_hr**: uncropped GT
 
     --> **degrade_hr_dataset_path**: cropped GT
     
@@ -152,10 +159,12 @@ You can collect your own dataset by sending videos into the pipeline and get the
 
 
 2. Train: Please check **opt.py** carefully to set the hyperparameters you want (modifying **Frequently Changed Setting** is usually enough).
-  
-   When you execute the following, we will create a "**tmp**" folder to hold generated lr images for sanity check. You can modify the code to delete it if you want.
 
+    **Note1**: When you execute the following, we will create a "**tmp**" folder to hold generated lr images for sanity check. You can modify the code to delete it if you want.
 
+    **Note2**: If you have a strong CPU, and if you want to accelerate, you can increase **parallel_num** in the **opt.py**.
+ 
+ 
     **Step1** (Net **L1** loss training): Run 
     ```shell
     python train_code/train.py 
@@ -177,23 +186,24 @@ You can collect your own dataset by sending videos into the pipeline and get the
 ## Citation
 Please cite us if our work is useful for your research.
 ```
-@article{wang2024apisr,
+@inproceedings{wang2024apisr,
   title={APISR: Anime Production Inspired Real-World Anime Super-Resolution},
   author={Wang, Boyang and Yang, Fengyu and Yu, Xihang and Zhang, Chao and Zhao, Hanbin},
-  journal={arXiv preprint arXiv:2403.01598},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={25574--25584},
   year={2024}
 }
 ```
 
 ## Disclaimer
-This project is released for academic use only. We disclaim responsibility for the distribution of the dataset. Users are solely liable for their actions. 
+This project is released for academic use only. We disclaim responsibility for the distribution of the model weight and sample images. Users are solely liable for their actions. 
 The project contributors are not legally affiliated with, nor accountable for, users' behaviors.
 
 
 ## License
-This project is released under the [GPL 3.0 license](LICENSE).
+This project is released under the [GPL 3.0 license](LICENSE). Also, check the disclaimer.
 
-## Contact
+## 📧 <a name="contact"></a> Contact
 If you have any questions, please feel free to contact me at hikaridawn412316@gmail.com or boyangwa@umich.edu.
 
 
@@ -213,4 +223,5 @@ If you develop/use APISR in your projects, welcome to let me know. I will write 
 - [IC9600](https://github.com/tinglyfeng/IC9600): The dataset curation pipeline uses IC9600 code to score image complexity level.
 - [danbooru-pretrained](https://github.com/RF5/danbooru-pretrained): Our Anime Dataset (Danbooru) pretrained RESNET50 model.
 - [Jupyter Demo](https://github.com/camenduru/APISR-jupyter): The jupter notebook demo is from [camenduru](https://github.com/camenduru).
-
+- [AVIF&HEIF](https://github.com/bigcat88/pillow_heif): The degradation of AVIF and HEFI is from pillow_heif.
+- [DAT](https://github.com/zhengchen1999/DAT): The DAT architecture we use for 4x scaling in model zoo is coming from this [link](https://github.com/zhengchen1999/DAT).
